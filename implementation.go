@@ -57,6 +57,30 @@ var operators = map[string]Operator{
 			return DefaultEvaluate(arity, "%v + %v", args)
 		},
 	},
+	"-": {
+		Symbol:   '-',
+		Arity:    2,
+		Priority: 10,
+		Evaluate: func(arity int, args ...ExpNode) string {
+			return DefaultEvaluate(arity, "%v - %v", args)
+		},
+	},
+	"*": {
+		Symbol:   '*',
+		Arity:    2,
+		Priority: 20,
+		Evaluate: func(arity int, args ...ExpNode) string {
+			return DefaultEvaluate(arity, "%v * %v", args)
+		},
+	},
+	"/": {
+		Symbol:   '/',
+		Arity:    2,
+		Priority: 20,
+		Evaluate: func(arity int, args ...ExpNode) string {
+			return DefaultEvaluate(arity, "%v / %v", args)
+		},
+	},
 }
 
 // TODO: document this function.
