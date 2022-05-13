@@ -1,8 +1,20 @@
 package lab2
 
-import "fmt"
+import (
+	"fmt"
+)
+
+type Operator struct {
+	Symbol   rune
+	Arity    int
+	Priority int
+	Evaluate func([]ExpNode) string
+}
 
 type ExpNode struct {
+	Operator Operator
+	Token    string
+	Args     []ExpNode
 }
 
 // TODO: document this function.
