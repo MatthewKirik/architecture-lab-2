@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"regexp"
 	"strings"
 )
 
@@ -102,6 +103,25 @@ var operators = []Operator{
 		Priority: 100,
 		Format:   "%token",
 	},
+}
+
+var ErrUnknownOperator = errors.New("Could not parse operator in the string!")
+
+func parseOperator(str string) (*Operator, []int, error) {
+	var opLoc []int
+	var operator *Operator
+	for _, v := range operators {
+		r := regexp.MustCompile(`\A` + v.Regex)
+		opLoc = r.FindStringIndex(str)
+		if len(opLoc) == 2 {
+			operator = &v
+			break
+		}
+	}
+	if len(opLoc) != 2 {
+		return nil, nil, ErrUnknownOperator
+	}
+	return operator, opLoc, nil
 }
 
 // TODO: document this function.
