@@ -35,6 +35,8 @@ func handleError(err error) bool {
 	return false
 }
 
+var operators = map[string]Operator{}
+
 // TODO: document this function.
 // PrefixToInfix converts
 func PrefixToInfix(input string) (string, error) {
