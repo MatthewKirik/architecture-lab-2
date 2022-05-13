@@ -4,16 +4,18 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 )
 
 type Operator struct {
-	Symbol   rune
+	Regex    string
 	Arity    int
 	Priority int
 	Format   string
 }
 
-func (op Operator) Evaluate(args []ExpNode) string {
+func (op Operator) Evaluate(token string, args []ExpNode) string {
+	format := strings.Replace(op.Format, "%token", token, -1)
 	var argStrings []interface{} = make([]interface{}, op.Arity)
 	for i := 0; i < op.Arity; i++ {
 		argStr, er := args[i].Evaluate()
@@ -22,11 +24,11 @@ func (op Operator) Evaluate(args []ExpNode) string {
 		}
 		argStrings[i] = argStr
 	}
-	return fmt.Sprintf(op.Format, argStrings...)
+	return fmt.Sprintf(format, argStrings...)
 }
 
 type ExpNode struct {
-	Operator Operator
+	Operator *Operator
 	Token    string
 	Args     []ExpNode
 }
@@ -37,7 +39,7 @@ func (node ExpNode) Evaluate() (string, error) {
 	if node.Operator.Arity != len(node.Args) {
 		return "", ErrWrongArity
 	}
-	return node.Operator.Evaluate(node.Args), nil
+	return node.Operator.Evaluate(node.Token, node.Args), nil
 }
 
 func handleError(err error) bool {
@@ -50,48 +52,55 @@ func handleError(err error) bool {
 
 var operators = []Operator{
 	{
-		Symbol:   '+',
+		Regex:    `\+`,
 		Arity:    2,
 		Priority: 10,
-		Format:   "%v + %v",
+		Format:   "%v %token %v",
 	},
 	{
-		Symbol:   '-',
+		Regex:    `\-`,
 		Arity:    2,
 		Priority: 10,
-		Format:   "%v - %v",
+		Format:   "%v %token %v",
 	},
 	{
-		Symbol:   '*',
+		Regex:    `\*`,
 		Arity:    2,
 		Priority: 20,
-		Format:   "%v * %v",
+		Format:   "%v %token %v",
 	},
 	{
-		Symbol:   '/',
+		Regex:    `\/`,
 		Arity:    2,
 		Priority: 20,
-		Format:   "%v / %v",
+		Format:   "%v %token %v",
 	},
 
 	{
-		Symbol:   '-',
+		Regex:    `\-`,
 		Arity:    1,
 		Priority: 30,
-		Format:   "-%v",
+		Format:   "%token%v",
 	},
 	{
-		Symbol:   '+',
+		Regex:    `\+`,
 		Arity:    1,
 		Priority: 30,
 		Format:   "%v",
 	},
 
 	{
-		Symbol:   '^',
+		Regex:    `\^`,
 		Arity:    1,
 		Priority: 40,
-		Format:   "^%v",
+		Format:   "%token%v",
+	},
+
+	{
+		Regex:    `[0-9]+`,
+		Arity:    0,
+		Priority: 100,
+		Format:   "%token",
 	},
 }
 
