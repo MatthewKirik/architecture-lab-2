@@ -27,6 +27,14 @@ func (node ExpNode) Evaluate() (string, error) {
 	return node.Operator.Evaluate(node.Args), nil
 }
 
+func handleError(err error) bool {
+	if err != nil {
+		fmt.Errorf("An error occured:  %v", err)
+		return true
+	}
+	return false
+}
+
 // TODO: document this function.
 // PrefixToInfix converts
 func PrefixToInfix(input string) (string, error) {
