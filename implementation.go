@@ -48,30 +48,50 @@ func handleError(err error) bool {
 	return false
 }
 
-var operators = map[string]Operator{
-	"+": {
+var operators = []Operator{
+	{
 		Symbol:   '+',
 		Arity:    2,
 		Priority: 10,
 		Format:   "%v + %v",
 	},
-	"-": {
+	{
 		Symbol:   '-',
 		Arity:    2,
 		Priority: 10,
 		Format:   "%v - %v",
 	},
-	"*": {
+	{
 		Symbol:   '*',
 		Arity:    2,
 		Priority: 20,
 		Format:   "%v * %v",
 	},
-	"/": {
+	{
 		Symbol:   '/',
 		Arity:    2,
 		Priority: 20,
 		Format:   "%v / %v",
+	},
+
+	{
+		Symbol:   '-',
+		Arity:    1,
+		Priority: 30,
+		Format:   "-%v",
+	},
+	{
+		Symbol:   '+',
+		Arity:    1,
+		Priority: 30,
+		Format:   "%v",
+	},
+
+	{
+		Symbol:   '^',
+		Arity:    1,
+		Priority: 40,
+		Format:   "^%v",
 	},
 }
 
