@@ -23,6 +23,9 @@ func (op Operator) Evaluate(token string, args []ExpNode) string {
 		if handleError(er) {
 			os.Exit(-1)
 		}
+		if args[i].Operator.Priority < op.Priority {
+			argStr = fmt.Sprintf("(%s)", argStr)
+		}
 		argStrings[i] = argStr
 	}
 	return fmt.Sprintf(format, argStrings...)
@@ -40,7 +43,8 @@ func (node ExpNode) Evaluate() (string, error) {
 	if node.Operator.Arity != len(node.Args) {
 		return "", ErrWrongArity
 	}
-	return node.Operator.Evaluate(node.Token, node.Args), nil
+	evaled := node.Operator.Evaluate(node.Token, node.Args)
+	return evaled, nil
 }
 
 func handleError(err error) bool {
@@ -98,7 +102,7 @@ var operators = []Operator{
 	},
 
 	{
-		Regex:    `[0-9]+`,
+		Regex:    `[0-9]+(\.[0-9]+)?`,
 		Arity:    0,
 		Priority: 100,
 		Format:   "%token",
@@ -155,6 +159,7 @@ func parsePrefix(str string) (*ExpNode, string, error) {
 // PrefixToInfix converts
 func PrefixToInfix(input string) (string, error) {
 	node, _, _ := parsePrefix(input)
-	fmt.Print(node.Evaluate())
+	str, _ := node.Evaluate()
+	fmt.Print(str)
 	return "TODO", fmt.Errorf("TODO")
 }
