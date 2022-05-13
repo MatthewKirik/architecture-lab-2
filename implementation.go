@@ -10,7 +10,19 @@ type Operator struct {
 	Symbol   rune
 	Arity    int
 	Priority int
-	Evaluate func([]ExpNode) string
+	Evaluate func(int, ...ExpNode) string
+}
+
+func DefaultEvaluate(arity int, format string, args []ExpNode) string {
+	var argStrings []interface{} = make([]interface{}, arity)
+	for i := 0; i < arity; i++ {
+		argStr, er := args[i].Evaluate()
+		if handleError(er) {
+			os.Exit(-1)
+		}
+		argStrings[i] = argStr
+	}
+	return fmt.Sprintf("%s + %s", argStrings...)
 }
 
 type ExpNode struct {
@@ -25,7 +37,7 @@ func (node ExpNode) Evaluate() (string, error) {
 	if node.Operator.Arity != len(node.Args) {
 		return "", ErrWrongArity
 	}
-	return node.Operator.Evaluate(node.Args), nil
+	return node.Operator.Evaluate(node.Operator.Arity, node.Args...), nil
 }
 
 func handleError(err error) bool {
@@ -41,16 +53,8 @@ var operators = map[string]Operator{
 		Symbol:   '+',
 		Arity:    2,
 		Priority: 10,
-		Evaluate: func(args []ExpNode) string {
-			arg1Str, er := args[0].Evaluate()
-			if handleError(er) {
-				os.Exit(-1)
-			}
-			arg2Str, er := args[1].Evaluate()
-			if handleError(er) {
-				os.Exit(-1)
-			}
-			return fmt.Sprintf("%s + %s", arg1Str, arg2Str)
+		Evaluate: func(arity int, args ...ExpNode) string {
+			return DefaultEvaluate(arity, "%v + %v", args)
 		},
 	},
 }
