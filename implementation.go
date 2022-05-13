@@ -3,6 +3,7 @@ package lab2
 import (
 	"errors"
 	"fmt"
+	"math"
 	"os"
 	"regexp"
 	"strings"
@@ -15,10 +16,19 @@ type Operator struct {
 	Format   string
 }
 
+const opens_group = -1
+const closes_group = -2
+
 func (op Operator) Evaluate(token string, args []ExpNode) string {
 	format := strings.Replace(op.Format, "%token", token, -1)
-	var argStrings []interface{} = make([]interface{}, op.Arity)
-	for i := 0; i < op.Arity; i++ {
+	var arity int
+	if op.Arity == opens_group {
+		arity = 1
+	} else {
+		arity = op.Arity
+	}
+	var argStrings []interface{}
+	for i := 0; i < arity; i++ {
 		argStr, er := args[i].Evaluate()
 		if handleError(er) {
 			os.Exit(-1)
@@ -26,7 +36,7 @@ func (op Operator) Evaluate(token string, args []ExpNode) string {
 		if args[i].Operator.Priority < op.Priority {
 			argStr = fmt.Sprintf("(%s)", argStr)
 		}
-		argStrings[i] = argStr
+		argStrings = append(argStrings, argStr)
 	}
 	return fmt.Sprintf(format, argStrings...)
 }
@@ -40,9 +50,10 @@ type ExpNode struct {
 var ErrWrongArity = errors.New("Arguments count of node does not match operator arity!")
 
 func (node ExpNode) Evaluate() (string, error) {
-	if node.Operator.Arity != len(node.Args) {
+	if node.Operator.Arity > 0 && node.Operator.Arity != len(node.Args) {
 		return "", ErrWrongArity
 	}
+	fmt.Println(node.Token)
 	evaled := node.Operator.Evaluate(node.Token, node.Args)
 	return evaled, nil
 }
@@ -102,6 +113,19 @@ var operators = []Operator{
 	},
 
 	{
+		Regex:    `\(`,
+		Arity:    opens_group,
+		Priority: 50,
+		Format:   "%v",
+	},
+	{
+		Regex:    `\)`,
+		Arity:    closes_group,
+		Priority: 50,
+		Format:   "",
+	},
+
+	{
 		Regex:    `[0-9]+(\.[0-9]+)?`,
 		Arity:    0,
 		Priority: 100,
@@ -123,12 +147,13 @@ func parseOperator(str string) (*Operator, []int, error) {
 		}
 	}
 	if len(opLoc) != 2 {
+		fmt.Print(len(str))
 		return nil, nil, ErrUnknownOperator
 	}
 	return operator, opLoc, nil
 }
 
-func parsePrefix(str string) (*ExpNode, string, error) {
+func parsePrefix(str string, greedy bool) (*ExpNode, string, error) {
 	str = strings.TrimSpace(str)
 	operator, opLoc, er := parseOperator(str)
 	if er != nil {
@@ -137,15 +162,33 @@ func parsePrefix(str string) (*ExpNode, string, error) {
 	token := str[opLoc[0]:opLoc[1]]
 	left := str[opLoc[1]:]
 
-	args := make([]ExpNode, operator.Arity)
-	for i := 0; i < operator.Arity; i++ {
-		arg, leftAfterArg, err := parsePrefix(left)
+	var args []ExpNode
+	var arity int
+	argGreedy := false
+	if greedy {
+		arity = math.MaxInt32
+	} else if operator.Arity == opens_group {
+		arity = 1
+		argGreedy = true
+	} else if operator.Arity == closes_group {
+		arity = 0
+	} else {
+		arity = operator.Arity
+	}
+	fmt.Println("Entering " + operator.Regex)
+	for i := 0; i < arity; i++ {
+		arg, leftAfterArg, err := parsePrefix(left, argGreedy)
 		if err != nil {
 			return nil, "", err
 		}
-		args[i] = *arg
 		left = leftAfterArg
+		if arg.Operator.Arity == closes_group {
+			break
+		}
+		args = append(args, *arg)
 	}
+	fmt.Println(len(args))
+	fmt.Println("Exiting " + operator.Regex)
 
 	node := &ExpNode{
 		Operator: operator,
@@ -158,7 +201,7 @@ func parsePrefix(str string) (*ExpNode, string, error) {
 // TODO: document this function.
 // PrefixToInfix converts
 func PrefixToInfix(input string) (string, error) {
-	node, _, _ := parsePrefix(input)
+	node, _, _ := parsePrefix(input, false)
 	str, _ := node.Evaluate()
 	fmt.Print(str)
 	return "TODO", fmt.Errorf("TODO")
