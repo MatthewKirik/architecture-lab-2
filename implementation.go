@@ -124,8 +124,37 @@ func parseOperator(str string) (*Operator, []int, error) {
 	return operator, opLoc, nil
 }
 
+func parsePrefix(str string) (*ExpNode, string, error) {
+	str = strings.TrimSpace(str)
+	operator, opLoc, er := parseOperator(str)
+	if er != nil {
+		return nil, "", er
+	}
+	token := str[opLoc[0]:opLoc[1]]
+	left := str[opLoc[1]:]
+
+	args := make([]ExpNode, operator.Arity)
+	for i := 0; i < operator.Arity; i++ {
+		arg, leftAfterArg, err := parsePrefix(left)
+		if err != nil {
+			return nil, "", err
+		}
+		args[i] = *arg
+		left = leftAfterArg
+	}
+
+	node := &ExpNode{
+		Operator: operator,
+		Token:    token,
+		Args:     args,
+	}
+	return node, left, nil
+}
+
 // TODO: document this function.
 // PrefixToInfix converts
 func PrefixToInfix(input string) (string, error) {
+	node, _, _ := parsePrefix(input)
+	fmt.Print(node.Evaluate())
 	return "TODO", fmt.Errorf("TODO")
 }
