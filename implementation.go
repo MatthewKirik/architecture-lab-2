@@ -82,19 +82,6 @@ var operators = []Operator{
 	},
 
 	{
-		Regex:    `\-`,
-		Arity:    1,
-		Priority: 30,
-		Format:   "%token%v",
-	},
-	{
-		Regex:    `\+`,
-		Arity:    1,
-		Priority: 30,
-		Format:   "%v",
-	},
-
-	{
 		Regex:    `\^`,
 		Arity:    1,
 		Priority: 40,
