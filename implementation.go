@@ -3,6 +3,7 @@ package lab2
 import (
 	"errors"
 	"fmt"
+	"math"
 	"os"
 	"regexp"
 	"strings"
@@ -15,6 +16,9 @@ type Operator struct {
 	Format        string
 	IsAssociative bool
 }
+
+const opens_group = -1
+const closes_group = -2
 
 func (op Operator) Evaluate(token string, args []ExpNode) string {
 	format := strings.Replace(op.Format, "%token", token, -1)
@@ -107,44 +111,97 @@ var operators = []Operator{
 
 var ErrUnknownOperator = errors.New("Could not parse operator in the string!")
 
-func parseOperator(str string) (*Operator, []int, error) {
-	var opLoc []int
-	var operator *Operator
-	for _, v := range operators {
-		r := regexp.MustCompile(`\A` + v.Regex)
-		opLoc = r.FindStringIndex(str)
-		if len(opLoc) == 2 {
-			operator = &v
-			break
-		}
-	}
-	if len(opLoc) != 2 {
-		return nil, nil, ErrUnknownOperator
-	}
-	return operator, opLoc, nil
+type OperatorLocation struct {
+	Operator Operator
+	Location []int
 }
 
-func parsePrefix(str string) (*ExpNode, string, error) {
-	str = strings.TrimSpace(str)
-	operator, opLoc, er := parseOperator(str)
-	if er != nil {
-		return nil, "", er
+func parseOperators(str string) ([]OperatorLocation, error) {
+	var opLocs []OperatorLocation
+	for _, v := range operators {
+		r := regexp.MustCompile(`\A` + v.Regex)
+		opLoc := r.FindStringIndex(str)
+		if len(opLoc) == 2 {
+			opLocs = append(opLocs, OperatorLocation{
+				Operator: v,
+				Location: opLoc,
+			})
+		}
 	}
-	token := str[opLoc[0]:opLoc[1]]
-	left := str[opLoc[1]:]
+	if len(opLocs) == 0 {
+		return nil, ErrUnknownOperator
+	}
+	return opLocs, nil
+}
 
-	args := make([]ExpNode, operator.Arity)
-	for i := 0; i < operator.Arity; i++ {
-		arg, leftAfterArg, err := parsePrefix(left)
+func parsePrefixArgs(str string, arity int) ([]ExpNode, string, error) {
+	var args []ExpNode
+	var left string = str
+	nextArgGreedy := false
+	for i := 0; i < arity; i++ {
+		arg, leftAfterArg, err := parsePrefix(left, nextArgGreedy)
 		if err != nil {
 			return nil, "", err
 		}
-		args[i] = *arg
 		left = leftAfterArg
+		nextArgGreedy = false
+
+		if arg.Operator.Arity == opens_group {
+			i--
+			nextArgGreedy = true
+			continue
+		}
+		if arg.Operator.Arity == closes_group {
+			break
+		}
+		args = append(args, *arg)
+	}
+	return args, left, nil
+}
+
+var ErrArgAmountMismatch = errors.New("Arguments amount mismatch!")
+
+func parsePrefix(str string, greedy bool) (*ExpNode, string, error) {
+	str = strings.TrimSpace(str)
+	ops, er := parseOperators(str)
+	if er != nil {
+		return nil, "", er
+	}
+	opLoc := ops[0]
+	var arity int
+	if !greedy {
+		for i := 1; i < len(ops)-1; i++ {
+			if ops[i].Operator.Arity > opLoc.Operator.Arity {
+				opLoc = ops[i]
+			}
+		}
+		arity = opLoc.Operator.Arity
+	} else {
+		arity = math.MaxInt32
+	}
+
+	token := str[opLoc.Location[0]:opLoc.Location[1]]
+	args, left, er := parsePrefixArgs(str[opLoc.Location[1]:], arity)
+	if er != nil {
+		return nil, "", er
+	}
+	if greedy {
+		argsCount := len(args)
+		found := false
+		for _, v := range ops {
+			if v.Operator.Arity == argsCount {
+				opLoc = v
+				found = true
+				break
+			}
+		}
+		if !found {
+			return nil, "", er
+		}
 	}
 
 	node := &ExpNode{
-		Operator: operator,
+		Operator: &opLoc.Operator,
 		Token:    token,
 		Args:     args,
 	}
@@ -154,7 +211,7 @@ func parsePrefix(str string) (*ExpNode, string, error) {
 // TODO: document this function.
 // PrefixToInfix converts
 func PrefixToInfix(input string) (string, error) {
-	node, _, _ := parsePrefix(input)
+	node, _, _ := parsePrefix(input, false)
 	str, _ := node.Evaluate()
 	fmt.Println(str)
 	return "TODO", fmt.Errorf("TODO")
