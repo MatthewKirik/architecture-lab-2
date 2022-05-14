@@ -93,7 +93,7 @@ var operators = []Operator{
 		Regex:         `\^`,
 		Arity:         2,
 		Priority:      40,
-		Format:        "%v%token%v",
+		Format:        "%v %token %v",
 		IsAssociative: false,
 	},
 
