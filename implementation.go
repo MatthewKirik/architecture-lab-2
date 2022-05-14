@@ -9,10 +9,11 @@ import (
 )
 
 type Operator struct {
-	Regex    string
-	Arity    int
-	Priority int
-	Format   string
+	Regex         string
+	Arity         int
+	Priority      int
+	Format        string
+	IsAssociative bool
 }
 
 func (op Operator) Evaluate(token string, args []ExpNode) string {
@@ -23,7 +24,10 @@ func (op Operator) Evaluate(token string, args []ExpNode) string {
 		if handleError(er) {
 			os.Exit(-1)
 		}
-		if args[i].Operator.Priority < op.Priority {
+
+		isLessPrioritized := args[i].Operator.Priority < op.Priority
+		isSameNonAss := args[i].Operator.Priority == op.Priority && !op.IsAssociative && i >= 1
+		if isLessPrioritized || isSameNonAss {
 			argStr = fmt.Sprintf("(%s)", argStr)
 		}
 		argStrings[i] = argStr
@@ -57,35 +61,40 @@ func handleError(err error) bool {
 
 var operators = []Operator{
 	{
-		Regex:    `\+`,
-		Arity:    2,
-		Priority: 10,
-		Format:   "%v %token %v",
+		Regex:         `\+`,
+		Arity:         2,
+		Priority:      10,
+		Format:        "%v %token %v",
+		IsAssociative: true,
 	},
 	{
-		Regex:    `\-`,
-		Arity:    2,
-		Priority: 10,
-		Format:   "%v %token %v",
+		Regex:         `\-`,
+		Arity:         2,
+		Priority:      10,
+		Format:        "%v %token %v",
+		IsAssociative: false,
 	},
 	{
-		Regex:    `\*`,
-		Arity:    2,
-		Priority: 20,
-		Format:   "%v %token %v",
+		Regex:         `\*`,
+		Arity:         2,
+		Priority:      20,
+		Format:        "%v %token %v",
+		IsAssociative: true,
 	},
 	{
-		Regex:    `\/`,
-		Arity:    2,
-		Priority: 20,
-		Format:   "%v %token %v",
+		Regex:         `\/`,
+		Arity:         2,
+		Priority:      20,
+		Format:        "%v %token %v",
+		IsAssociative: false,
 	},
 
 	{
-		Regex:    `\^`,
-		Arity:    1,
-		Priority: 40,
-		Format:   "%token%v",
+		Regex:         `\^`,
+		Arity:         2,
+		Priority:      40,
+		Format:        "%v%token%v",
+		IsAssociative: false,
 	},
 
 	{
@@ -147,6 +156,6 @@ func parsePrefix(str string) (*ExpNode, string, error) {
 func PrefixToInfix(input string) (string, error) {
 	node, _, _ := parsePrefix(input)
 	str, _ := node.Evaluate()
-	fmt.Print(str)
+	fmt.Println(str)
 	return "TODO", fmt.Errorf("TODO")
 }
