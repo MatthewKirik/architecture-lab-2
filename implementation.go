@@ -102,6 +102,29 @@ var operators = []Operator{
 	},
 
 	{
+		Regex:         `\-`,
+		Arity:         1,
+		Priority:      100,
+		Format:        "%token%v",
+		IsAssociative: false,
+	},
+
+	{
+		Regex:         `\(`,
+		Arity:         opens_group,
+		Priority:      200,
+		Format:        "",
+		IsAssociative: false,
+	},
+	{
+		Regex:         `\)`,
+		Arity:         closes_group,
+		Priority:      200,
+		Format:        "",
+		IsAssociative: false,
+	},
+
+	{
 		Regex:    `[0-9]+(\.[0-9]+)?`,
 		Arity:    0,
 		Priority: 100,
