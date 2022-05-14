@@ -98,7 +98,21 @@ var operators = []Operator{
 	},
 
 	{
+		Regex:         `sin`,
+		Arity:         1,
+		Priority:      50,
+		Format:        "%token(%v)",
+		IsAssociative: false,
+	},
+	{
 		Regex:    `[0-9]+(\.[0-9]+)?`,
+		Arity:    0,
+		Priority: 100,
+		Format:   "%token",
+	},
+
+	{
+		Regex:    `[a-zA-Z]+`,
 		Arity:    0,
 		Priority: 100,
 		Format:   "%token",
