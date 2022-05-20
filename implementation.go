@@ -8,6 +8,7 @@ import (
 	"strings"
 )
 
+// wrong naming of type and fields?
 type Operator struct {
 	Regex         string
 	Arity         int
@@ -16,6 +17,7 @@ type Operator struct {
 	IsAssociative bool
 }
 
+// wrong naming?
 func (op Operator) Evaluate(token string, args []ExpNode) string {
 	format := strings.Replace(op.Format, "%token", token, -1)
 	var argStrings []interface{} = make([]interface{}, op.Arity)
@@ -26,6 +28,7 @@ func (op Operator) Evaluate(token string, args []ExpNode) string {
 		}
 
 		isLessPrioritized := args[i].Operator.Priority < op.Priority
+		// NonAss???
 		isSameNonAss := args[i].Operator.Priority == op.Priority && !op.IsAssociative && i >= 1
 		if isLessPrioritized || isSameNonAss {
 			argStr = fmt.Sprintf("(%s)", argStr)
@@ -35,25 +38,31 @@ func (op Operator) Evaluate(token string, args []ExpNode) string {
 	return fmt.Sprintf(format, argStrings...)
 }
 
+// wrong naming of type and fields?
 type ExpNode struct {
 	Operator *Operator
 	Token    string
 	Args     []ExpNode
 }
 
+// wrong naming + weird way to create error?
+// why don't use fmt.Errorf(...) ?
 var ErrWrongArity = errors.New("Arguments count of node does not match operator arity!")
 
+// wrong naming?
 func (node ExpNode) Evaluate() (string, error) {
 	if node.Operator.Arity != len(node.Args) {
 		return "", ErrWrongArity
 	}
+
+	// evaled means evaluated?
 	evaled := node.Operator.Evaluate(node.Token, node.Args)
 	return evaled, nil
 }
 
 func handleError(err error) bool {
 	if err != nil {
-		fmt.Errorf("An error occured:  %v", err)
+		fmt.Errorf("An error occured:  %v", err) // WTF??????
 		return true
 	}
 	return false
@@ -88,7 +97,6 @@ var operators = []Operator{
 		Format:        "%v %token %v",
 		IsAssociative: false,
 	},
-
 	{
 		Regex:         `\^`,
 		Arity:         2,
@@ -96,7 +104,6 @@ var operators = []Operator{
 		Format:        "%v %token %v",
 		IsAssociative: false,
 	},
-
 	{
 		Regex:         `sin`,
 		Arity:         1,
@@ -110,7 +117,6 @@ var operators = []Operator{
 		Priority: 100,
 		Format:   "%token",
 	},
-
 	{
 		Regex:    `[a-zA-Z]+`,
 		Arity:    0,
@@ -119,6 +125,8 @@ var operators = []Operator{
 	},
 }
 
+// wrong naming + weird way to create error?
+// why don't use fmt.Errorf(...) ?
 var ErrUnknownOperator = errors.New("Could not parse operator in the string!")
 
 func parseOperator(str string) (*Operator, []int, error) {
