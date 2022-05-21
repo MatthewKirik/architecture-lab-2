@@ -2,21 +2,32 @@ package main
 
 import (
 	"flag"
+	"io"
+	"log"
+	"os"
 	"strings"
+
+	lab2 "github.com/MatthewKirik/architecture-lab-2"
 )
 
 var (
-	inputExpression = flag.String("e", "xx", "Prefix expression that should be converted")
-	inputFile       = flag.String("f", "", "Input file with prefix expression")
-	outputFile      = flag.String("o", "", "Result file with infix expression")
+	inputExpression = flag.String("e", "", "Prefix expression that should be converted")
+	inputFilepath   = flag.String("f", "", "Input file with prefix expression")
+	outputFilepath  = flag.String("o", "", "Result file with infix expression")
 )
 
 func main() {
 	flag.Parse()
 
 	*inputExpression = strings.TrimSpace(*inputExpression)
-	*inputFile = strings.TrimSpace(*inputFile)
-	*outputFile = strings.TrimSpace(*outputFile)
+	*inputFilepath = strings.TrimSpace(*inputFilepath)
+	*outputFilepath = strings.TrimSpace(*outputFilepath)
+
+	var (
+		reader = io.Reader(nil)
+		writer = io.Writer(nil)
+		err    = error(nil)
+	)
 
 	// inputIsNotSpecified = len(*inputFile) == 0 &&
 	// 	len(*inputExpression) == 0
@@ -30,26 +41,35 @@ func main() {
 	// 	// TODO: print error
 	// }
 
-	if *inputExpression != "" && *inputFile != "" {
-		// TODO: print error many inputs specified
-
-	} else if *inputExpression != "" && *inputFile == "" {
-		// TODO create new reader
-
-	} else if *inputExpression == "" && *inputFile != "" {
-		// try open input file, handle error
-
+	if *inputExpression != "" && *inputFilepath != "" {
+		log.Fatal("You have specified too many inputs")
+	} else if *inputExpression != "" && *inputFilepath == "" {
+		reader = strings.NewReader(*inputExpression)
+	} else if *inputExpression == "" && *inputFilepath != "" {
+		reader, err = os.Open(*inputFilepath)
+		if err != nil {
+			log.Fatalf("Cannot open file with path: '%s'", *inputFilepath)
+		}
 	} else {
-		// TODO: Print error no input was specified
-
+		log.Fatal("You have not specified any input")
 	}
 
-	if *outputFile != "" {
-		// Create output file
-
+	if *outputFilepath != "" {
+		writer, err = os.Create(*outputFilepath)
+		if err != nil {
+			log.Fatalf("Cannot create file with path: '%s'", *outputFilepath)
+		}
 	} else {
-		// Set defaut output as STDOUT
+		writer = os.Stdout
+	}
 
+	chPtr := &lab2.ComputeHandler{
+		Reader: reader,
+		Writer: writer,
+	}
+
+	if errCompute := chPtr.Compute(); errCompute != nil {
+		log.Fatal(errCompute)
 	}
 
 	// fmt.Printf("value = \"%s\"\n", *inputExpression)
@@ -59,5 +79,4 @@ func main() {
 	// prints to stderr
 	// fmt.Fprintf(os.Stderr, "number of foo: %d", 1)
 	// fmt.Fprintln(os.Stderr, "hello world")
-
 }
