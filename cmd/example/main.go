@@ -24,22 +24,10 @@ func main() {
 	*outputFilepath = strings.TrimSpace(*outputFilepath)
 
 	var (
-		reader = io.Reader(nil)
-		writer = io.Writer(nil)
-		err    = error(nil)
+		reader io.Reader
+		writer io.Writer
+		err    error
 	)
-
-	// inputIsNotSpecified = len(*inputFile) == 0 &&
-	// 	len(*inputExpression) == 0
-	// if inputIsNotSpecified {
-	// 	// TODO: print error
-	// }
-
-	// manyInputsSpecified := len(*inputFile) > 0 &&
-	// 	len(*inputExpression) > 0
-	// if manyInputsSpecified {
-	// 	// TODO: print error
-	// }
 
 	if *inputExpression != "" && *inputFilepath != "" {
 		log.Fatal("You have specified too many inputs")
@@ -71,12 +59,4 @@ func main() {
 	if errCompute := chPtr.Compute(); errCompute != nil {
 		log.Fatal(errCompute)
 	}
-
-	// fmt.Printf("value = \"%s\"\n", *inputExpression)
-	// fmt.Printf("value = \"%s\"\n", *inputFile)
-	// fmt.Printf("value = \"%s\"\n", *outputFile)
-
-	// prints to stderr
-	// fmt.Fprintf(os.Stderr, "number of foo: %d", 1)
-	// fmt.Fprintln(os.Stderr, "hello world")
 }
