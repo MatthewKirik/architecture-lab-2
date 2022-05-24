@@ -170,6 +170,6 @@ func parsePrefix(str string) (*ExpNode, string, error) {
 func PrefixToInfix(input string) (string, error) {
 	node, _, _ := parsePrefix(input)
 	str, _ := node.Evaluate()
-	fmt.Println(str)
-	return "TODO", fmt.Errorf("TODO")
+	// fmt.Println(str)
+	return str, nil
 }
