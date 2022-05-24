@@ -2,9 +2,12 @@ package lab2
 
 import (
 	"fmt"
+	"testing"
 
 	. "gopkg.in/check.v1"
 )
+
+func TestImplementation(t *testing.T) { TestingT(t) }
 
 func (s *TestSuite) TestPrefixToInfix(c *C) {
 	samples := map[string]string{
