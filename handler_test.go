@@ -14,18 +14,18 @@ type mockReader struct {
 	DummyInput    []byte
 }
 
-func (mw *mockReader) Read(p []byte) (int, error) {
-	mw.ReadWasCalled = true
-	copy(p, mw.DummyInput)
+func (mr *mockReader) Read(p []byte) (int, error) {
+	mr.ReadWasCalled = true
+	copy(p, mr.DummyInput)
 
 	var bytesWasRead int
-	if len(p) < len(mw.DummyInput) {
+	if len(p) < len(mr.DummyInput) {
 		bytesWasRead = len(p)
 	} else {
-		bytesWasRead = len(mw.DummyInput)
+		bytesWasRead = len(mr.DummyInput)
 	}
 
-	// can't we go the way below intead
+	// can't we go the way below instead
 	// of such long confitional sentence?
 	// bytesWasRead := len(string(p))
 
