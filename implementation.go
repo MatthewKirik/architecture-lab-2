@@ -16,11 +16,15 @@ type Operator struct {
 	IsAssociative bool
 }
 
-func (op Operator) Evaluate(token string, args []ExpNode) string {
+var parseEr = errors.New("Error while parsing input string!")
+var errWrongArity = errors.New("Arguments count of node does not match operator arity!")
+var errUnknownOperator = errors.New("Could not parse operator in the string!")
+
+func (op Operator) evaluate(token string, args []ExpNode) string {
 	format := strings.Replace(op.Format, "%token", token, -1)
 	var argStrings []interface{} = make([]interface{}, op.Arity)
 	for i := 0; i < op.Arity; i++ {
-		argStr, er := args[i].Evaluate()
+		argStr, er := args[i].evaluate()
 		if handleError(er) {
 			os.Exit(-1)
 		}
@@ -41,13 +45,11 @@ type ExpNode struct {
 	Args     []ExpNode
 }
 
-var ErrWrongArity = errors.New("Arguments count of node does not match operator arity!")
-
-func (node ExpNode) Evaluate() (string, error) {
+func (node ExpNode) evaluate() (string, error) {
 	if node.Operator.Arity != len(node.Args) {
-		return "", ErrWrongArity
+		return "", errWrongArity
 	}
-	evaled := node.Operator.Evaluate(node.Token, node.Args)
+	evaled := node.Operator.evaluate(node.Token, node.Args)
 	return evaled, nil
 }
 
@@ -112,14 +114,12 @@ var operators = []Operator{
 	},
 
 	{
-		Regex:    `[a-zA-Z]+`,
+		Regex:    `[a-zA-Z]`,
 		Arity:    0,
 		Priority: 100,
 		Format:   "%token",
 	},
 }
-
-var ErrUnknownOperator = errors.New("Could not parse operator in the string!")
 
 func parseOperator(str string) (*Operator, []int, error) {
 	var opLoc []int
@@ -133,7 +133,7 @@ func parseOperator(str string) (*Operator, []int, error) {
 		}
 	}
 	if len(opLoc) != 2 {
-		return nil, nil, ErrUnknownOperator
+		return nil, nil, errUnknownOperator
 	}
 	return operator, opLoc, nil
 }
@@ -165,11 +165,17 @@ func parsePrefix(str string) (*ExpNode, string, error) {
 	return node, left, nil
 }
 
-// TODO: document this function.
-// PrefixToInfix converts
 func PrefixToInfix(input string) (string, error) {
-	node, _, _ := parsePrefix(input)
-	str, _ := node.Evaluate()
-	// fmt.Println(str)
+	node, left, er := parsePrefix(input)
+	if er != nil {
+		return "", er
+	}
+	if len(left) > 0 {
+		return "", parseEr
+	}
+	str, er := node.evaluate()
+	if er != nil {
+		return "", er
+	}
 	return str, nil
 }
