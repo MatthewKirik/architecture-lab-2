@@ -51,29 +51,38 @@ func TestCompute(t *testing.T) {
 
 func (s *TestHandlerSuite) TestReadWriteWasCalled(c *check.C) {
 	// consider use s.dummyObj interface{} ???
-	// dummyStr := "Hello, World!"
+	dummyStr := "Hello, World!"
+	inputBuf := []byte(dummyStr)
+	outputBuf := make([]byte, 0, 64)
 	mr := &mockReader{
 		ReadWasCalled: false,
-		DummyInput:    bytes.NewBuffer(make([]byte, 0, 64)),
+		DummyInput:    bytes.NewBuffer(inputBuf),
 	}
+	mw := &mockWriter{
+		WriteWasCalled: false,
+		DummyOutput:    bytes.NewBuffer(outputBuf),
+	}
+
 	handler := ComputeHandler{
 		Reader: mr,
-		//////////////
-		//////////////
-		//////////////
-		//  nil???
-		Writer: nil,
+		Writer: mw,
 	}
+
+	inputLenBeforeTest := mr.DummyInput.Len()
+	outputLenBeforeTest := mw.DummyOutput.Len()
 
 	handler.Compute()
 
-	////////////////
-	////////////////
-	////////////////
-	////////////////
-	////////////////
-	////////////////
+	inputLenAfterTest := mr.DummyInput.Len()
+	outputLenAfterTest := mw.DummyOutput.Len()
+
+	wasBytesRead := inputLenBeforeTest > inputLenAfterTest
+	wasBytesWritten := outputLenBeforeTest < outputLenAfterTest
+
 	c.Assert(mr.ReadWasCalled, check.Equals, true)
+	c.Assert(wasBytesRead, check.Equals, true)
+	c.Assert(mw.WriteWasCalled, check.Equals, true)
+	c.Assert(wasBytesWritten, check.Equals, true)
 }
 
 // func (s *TestHandlerSuite) TestWriteWasCalled(c *C) {
