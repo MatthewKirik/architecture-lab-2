@@ -2,14 +2,30 @@ package lab2
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
-	. "gopkg.in/check.v1"
+	"gopkg.in/check.v1"
 )
 
-func TestImplementation(t *testing.T) { TestingT(t) }
+type TestSuite struct{}
 
-func (s *TestSuite) TestPrefixToInfix(c *C) {
+func TestImplementation(t *testing.T) {
+	conf := &check.RunConf{
+		Output:        os.Stdout,
+		Stream:        false,
+		Verbose:       false,
+		Filter:        "",
+		Benchmark:     false,
+		BenchmarkTime: 0,
+		BenchmarkMem:  false,
+		KeepWorkDir:   false,
+	}
+
+	check.Run(&TestSuite{}, conf)
+}
+
+func (s *TestSuite) TestPrefixToInfix(c *check.C) {
 	samples := map[string]string{
 		"/ * / 22 12 44 * 1 + 10 1":               "22 / 12 * 44 / (1 * (10 + 1))",
 		"/ / / 12 12 12 12":                       "12 / 12 / 12 / 12",
@@ -24,9 +40,9 @@ func (s *TestSuite) TestPrefixToInfix(c *C) {
 	for prefix, expected := range samples {
 		res, err := PrefixToInfix(prefix)
 		if err != nil {
-			c.Assert(err, ErrorMatches, expected)
+			c.Assert(err, check.ErrorMatches, expected)
 		} else {
-			c.Assert(res, Equals, expected)
+			c.Assert(res, check.Equals, expected)
 		}
 	}
 }
