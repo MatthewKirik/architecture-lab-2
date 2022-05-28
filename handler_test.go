@@ -32,7 +32,18 @@ func (mw *mockWriter) Write(p []byte) (int, error) {
 	return bytesWasWritten, err
 }
 
-type TestHandlerSuite struct{}
+type TestCase struct {
+	InputStr        string
+	ExpectedStr     string
+	IsErrorExpected bool
+}
+
+type TestHandlerSuite struct {
+	mr *mockReader
+	mw *mockWriter
+	ch *ComputeHandler
+	// testCases *[]TestCase
+}
 
 func TestCompute(t *testing.T) {
 	conf := &check.RunConf{
@@ -46,10 +57,39 @@ func TestCompute(t *testing.T) {
 		KeepWorkDir:   false,
 	}
 
-	check.Run(&TestHandlerSuite{}, conf)
+	dummyStr := "Hello, World!"
+	inputBuf := []byte(dummyStr)
+	outputBuf := make([]byte, 0, 64)
+	mr := &mockReader{
+		ReadWasCalled: false,
+		DummyInput:    bytes.NewBuffer(inputBuf),
+	}
+	mw := &mockWriter{
+		WriteWasCalled: false,
+		DummyOutput:    bytes.NewBuffer(outputBuf),
+	}
+	ch := &ComputeHandler{
+		Reader: mr,
+		Writer: mw,
+	}
+
+	// testCases := &[]TestCase{
+	// 	TestCase{
+	// 		InputStr: ,
+	// 		ExpectedStr: ,
+	// 		IsErrorExpected: ,
+	// 	}
+	// }
+
+	suite := &TestHandlerSuite{
+		mr,
+		mw,
+		ch,
+	}
+	check.Run(suite, conf)
 }
 
-func (s *TestHandlerSuite) TestReadWriteWasCalled(c *check.C) {
+func (s *TestHandlerSuite) SetUpTest(c *check.C) {
 	// consider use s.dummyObj interface{} ???
 	dummyStr := "Hello, World!"
 	inputBuf := []byte(dummyStr)
@@ -62,46 +102,80 @@ func (s *TestHandlerSuite) TestReadWriteWasCalled(c *check.C) {
 		WriteWasCalled: false,
 		DummyOutput:    bytes.NewBuffer(outputBuf),
 	}
-
-	handler := ComputeHandler{
+	ch := &ComputeHandler{
 		Reader: mr,
 		Writer: mw,
 	}
 
-	inputLenBeforeTest := mr.DummyInput.Len()
-	outputLenBeforeTest := mw.DummyOutput.Len()
+	s.mr = mr
+	s.mw = mw
+	s.ch = ch
+}
 
-	handler.Compute()
+func (s *TestHandlerSuite) TearDownTest(c *check.C) {
+	s.mr = nil
+	s.mw = nil
+	s.ch = nil
+}
 
-	inputLenAfterTest := mr.DummyInput.Len()
-	outputLenAfterTest := mw.DummyOutput.Len()
+func (s *TestHandlerSuite) TestReadWasCalled(c *check.C) {
+	inputLenBeforeTest := s.mr.DummyInput.Len()
 
+	s.ch.Compute()
+
+	inputLenAfterTest := s.mr.DummyInput.Len()
 	wasBytesRead := inputLenBeforeTest > inputLenAfterTest
+
+	c.Assert(s.mr.ReadWasCalled, check.Equals, true)
+	c.Assert(wasBytesRead, check.Equals, true)
+}
+
+func (s *TestHandlerSuite) TestWriteWasCalled(c *check.C) {
+	outputLenBeforeTest := s.mw.DummyOutput.Len()
+
+	s.ch.Compute()
+
+	outputLenAfterTest := s.mw.DummyOutput.Len()
 	wasBytesWritten := outputLenBeforeTest < outputLenAfterTest
 
-	c.Assert(mr.ReadWasCalled, check.Equals, true)
-	c.Assert(wasBytesRead, check.Equals, true)
-	c.Assert(mw.WriteWasCalled, check.Equals, true)
+	c.Assert(s.mw.WriteWasCalled, check.Equals, true)
 	c.Assert(wasBytesWritten, check.Equals, true)
 }
 
-// func (s *TestHandlerSuite) TestWriteWasCalled(c *C) {
-// 	dummyStr := "Hello, World!"
-// 	mr := &mockReader{
-// 		ReadWasCalled: false,
-// 		DummyInput:    []byte(dummyStr),
-// 	}
-// 	mw := &mockWriter{
-// 		WriteWasCalled: false,
-// 		DummyOutput:    []byte(dummyStr),
-// 	}
+func (s *TestHandlerSuite) TestInput(c *check.C) {
+	testCases := []TestCase{
+		{
+			InputStr:        "dsdffff",
+			ExpectedStr:     "",
+			IsErrorExpected: true,
+		},
+		{
+			InputStr:        "sasdasdd",
+			ExpectedStr:     "",
+			IsErrorExpected: true,
+		},
+	}
 
-func (s *TestHandlerSuite) TestWriteWasCalled(c *check.C) {
-	// TODO: implements
-}
+	for _, testCase := range testCases {
+		inputBuf := []byte(testCase.InputStr)
+		mr := &mockReader{
+			ReadWasCalled: false,
+			DummyInput:    bytes.NewBuffer(inputBuf),
+		}
+		s.ch = &ComputeHandler{
+			Reader: mr,
+			Writer: s.mw,
+		}
 
-func (s *TestHandlerSuite) TestInputSyntaxError(c *check.C) {
-	// TODO: implements
+		err := s.ch.Compute()
+
+		if testCase.IsErrorExpected {
+			c.Assert(err, check.NotNil)
+		} else {
+			actualWritten := s.mw.DummyOutput.String()
+			c.Assert(testCase.ExpectedStr, check.Equals, actualWritten)
+		}
+	}
 }
 
 func (s *TestHandlerSuite) TestInputMatchesOutput(c *check.C) {
