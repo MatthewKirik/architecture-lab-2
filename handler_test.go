@@ -47,7 +47,7 @@ func createMocks(inputStr string) (*mockReader, *mockWriter) {
 	return mr, mw
 }
 
-type TestCase struct {
+type testCase struct {
 	InputStr        string
 	ExpectedStr     string
 	IsErrorExpected bool
@@ -138,7 +138,7 @@ func (s *TestHandlerSuite) TestWriteWasCalled(c *check.C) {
 }
 
 func (s *TestHandlerSuite) TestInput(c *check.C) {
-	testCases := []TestCase{
+	testCases := []testCase{
 		{
 			InputStr:        "ab rakada bra12 123 ? + /",
 			ExpectedStr:     "",
