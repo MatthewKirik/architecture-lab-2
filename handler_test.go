@@ -71,19 +71,7 @@ func TestCompute(t *testing.T) {
 		KeepWorkDir:   false,
 	}
 
-	dummyStr := "Hello, World!"
-	mr, mw := createMocks(dummyStr)
-	ch := &ComputeHandler{
-		Reader: mr,
-		Writer: mw,
-	}
-
-	suite := &TestHandlerSuite{
-		mr,
-		mw,
-		ch,
-	}
-	check.Run(suite, conf)
+	check.Run(&TestHandlerSuite{}, conf)
 }
 
 func (s *TestHandlerSuite) SetUpTest(c *check.C) {
