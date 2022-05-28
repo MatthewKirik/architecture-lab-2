@@ -52,6 +52,22 @@ func TestCompute(t *testing.T) {
 	TestingT(t)
 }
 
+func (s *TestHandlerSuite) TestReadWasCalled(c *C) {
+	// TODO: implements
+}
+
+func (s *TestHandlerSuite) TestWriteWasCalled(c *C) {
+	// TODO: implements
+}
+
+func (s *TestHandlerSuite) TestInputSyntaxError(c *C) {
+	// TODO: implements
+}
+
+func (s *TestHandlerSuite) TestInputMatchesOutput(c *C) {
+	// TODO: implements
+}
+
 // func (s *TestSuite) TestComputeOutput(c *C) {
 //     inputStr, expected := "+55-2", "5 + 5 - 2"
 //     buf := new(bytes.Buffer)
