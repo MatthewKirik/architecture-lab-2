@@ -57,7 +57,6 @@ type TestHandlerSuite struct {
 	mr *mockReader
 	mw *mockWriter
 	ch *ComputeHandler
-	// testCases *[]TestCase
 }
 
 func TestCompute(t *testing.T) {
@@ -79,14 +78,6 @@ func TestCompute(t *testing.T) {
 		Writer: mw,
 	}
 
-	// testCases := &[]TestCase{
-	// 	TestCase{
-	// 		InputStr: ,
-	// 		ExpectedStr: ,
-	// 		IsErrorExpected: ,
-	// 	}
-	// }
-
 	suite := &TestHandlerSuite{
 		mr,
 		mw,
@@ -96,7 +87,6 @@ func TestCompute(t *testing.T) {
 }
 
 func (s *TestHandlerSuite) SetUpTest(c *check.C) {
-	// consider use s.dummyObj interface{} ???
 	dummyStr := "Dummy input string"
 	mr, mw := createMocks(dummyStr)
 	ch := &ComputeHandler{
@@ -193,24 +183,3 @@ func (s *TestHandlerSuite) TestInput(c *check.C) {
 		}
 	}
 }
-
-// func (s *TestSuite) TestComputeOutput(c *C) {
-//     inputStr, expected := "+55-2", "5 + 5 - 2"
-//     buf := new(bytes.Buffer)
-//     reader := strings.NewReader(inputStr)
-//     handler := ComputeHandler{Reader: reader, Writer: buf}
-//     handler.Compute()
-//     c.Assert(buf.String(), Equals, expected)
-// }
-
-// func (s *TestSuite) TestComputeSyntax(c *C) {
-//     errorExamples := map[string]ComputeHandler{
-//         "input is not specified":   ComputeHandler{},
-//         "output is not specified":  ComputeHandler{Reader: strings.NewReader("+ 2 4")},
-//         "invalid input expression": ComputeHandler{Reader: strings.NewReader(""), Writer: new(bytes.Buffer)},
-//     }
-//     for expected, obtained := range errorExamples {
-//         errObtained := obtained.Compute()
-//         c.Assert(errObtained, ErrorMatches, expected)
-//     }
-// }
