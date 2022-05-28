@@ -5,5 +5,8 @@ import (
 )
 
 type TestSuite struct{}
+type TestHandlerSuite struct{}
 
-var _ = Suite(&TestSuite{})
+func init() {
+	Suite(&TestHandlerSuite{})
+}

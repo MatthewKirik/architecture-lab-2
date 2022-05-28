@@ -53,12 +53,54 @@ func TestCompute(t *testing.T) {
 }
 
 func (s *TestHandlerSuite) TestReadWasCalled(c *C) {
-	// TODO: implements
+	// consider use s.dummyObj interface{} ???
+	dummyStr := "Hello, World!"
+	mr := &mockReader{
+		ReadWasCalled: false,
+		DummyInput:    []byte(dummyStr),
+	}
+	handler := ComputeHandler{
+		Reader: mr,
+		//////////////
+		//////////////
+		//////////////
+		//  nil???
+		Writer: nil,
+	}
+
+	handler.Compute()
+
+	////////////////
+	////////////////
+	////////////////
+	////////////////
+	////////////////
+	////////////////
+	c.Assert(mr.ReadWasCalled, Equals, true)
 }
 
-func (s *TestHandlerSuite) TestWriteWasCalled(c *C) {
-	// TODO: implements
-}
+// func (s *TestHandlerSuite) TestWriteWasCalled(c *C) {
+// 	dummyStr := "Hello, World!"
+// 	mr := &mockReader{
+// 		ReadWasCalled: false,
+// 		DummyInput:    []byte(dummyStr),
+// 	}
+// 	mw := &mockWriter{
+// 		WriteWasCalled: false,
+// 		DummyOutput:    []byte(dummyStr),
+// 	}
+
+// 	handler := ComputeHandler{
+// 		Reader: mr,
+// 		Writer: mw,
+// 	}
+
+// 	err := handler.Compute()
+
+// 	c.Assert(mr.ReadWasCalled, Equals, true)
+// 	c.Assert(mw.WriteWasCalled, Equals, true)
+// 	c.Assert(err, Equals, nil)
+// }
 
 func (s *TestHandlerSuite) TestInputSyntaxError(c *C) {
 	// TODO: implements
