@@ -2,34 +2,22 @@ package lab2
 
 import (
 	"bytes"
-	// "strings"
+	"os"
 	"testing"
-	// "io"
 
-	. "gopkg.in/check.v1"
+	"gopkg.in/check.v1"
 )
 
 type mockReader struct {
 	ReadWasCalled bool
-	DummyInput    []byte
+	DummyInput    *bytes.Buffer
 }
 
 func (mr *mockReader) Read(p []byte) (int, error) {
 	mr.ReadWasCalled = true
-	copy(p, mr.DummyInput)
+	bytesWasRead, err := mr.DummyInput.Read(p)
 
-	var bytesWasRead int
-	if len(p) < len(mr.DummyInput) {
-		bytesWasRead = len(p)
-	} else {
-		bytesWasRead = len(mr.DummyInput)
-	}
-
-	// can't we go the way below instead
-	// of such long confitional sentence?
-	// bytesWasRead := len(string(p))
-
-	return bytesWasRead, nil
+	return bytesWasRead, err
 }
 
 type mockWriter struct {
@@ -39,25 +27,34 @@ type mockWriter struct {
 
 func (mw *mockWriter) Write(p []byte) (int, error) {
 	mw.WriteWasCalled = true
+	bytesWasWritten, err := mw.DummyOutput.Write(p)
 
-	nb, err := mw.DummyOutput.Write(p)
-	if err != nil {
-		return 0, err
-	}
-
-	return nb, nil
+	return bytesWasWritten, err
 }
+
+type TestHandlerSuite struct{}
 
 func TestCompute(t *testing.T) {
-	TestingT(t)
+	conf := &check.RunConf{
+		Output:        os.Stdout,
+		Stream:        false,
+		Verbose:       false,
+		Filter:        "",
+		Benchmark:     false,
+		BenchmarkTime: 0,
+		BenchmarkMem:  false,
+		KeepWorkDir:   false,
+	}
+
+	check.Run(&TestHandlerSuite{}, conf)
 }
 
-func (s *TestHandlerSuite) TestReadWasCalled(c *C) {
+func (s *TestHandlerSuite) TestReadWriteWasCalled(c *check.C) {
 	// consider use s.dummyObj interface{} ???
-	dummyStr := "Hello, World!"
+	// dummyStr := "Hello, World!"
 	mr := &mockReader{
 		ReadWasCalled: false,
-		DummyInput:    []byte(dummyStr),
+		DummyInput:    bytes.NewBuffer(make([]byte, 0, 64)),
 	}
 	handler := ComputeHandler{
 		Reader: mr,
@@ -76,7 +73,7 @@ func (s *TestHandlerSuite) TestReadWasCalled(c *C) {
 	////////////////
 	////////////////
 	////////////////
-	c.Assert(mr.ReadWasCalled, Equals, true)
+	c.Assert(mr.ReadWasCalled, check.Equals, true)
 }
 
 // func (s *TestHandlerSuite) TestWriteWasCalled(c *C) {
@@ -90,23 +87,15 @@ func (s *TestHandlerSuite) TestReadWasCalled(c *C) {
 // 		DummyOutput:    []byte(dummyStr),
 // 	}
 
-// 	handler := ComputeHandler{
-// 		Reader: mr,
-// 		Writer: mw,
-// 	}
-
-// 	err := handler.Compute()
-
-// 	c.Assert(mr.ReadWasCalled, Equals, true)
-// 	c.Assert(mw.WriteWasCalled, Equals, true)
-// 	c.Assert(err, Equals, nil)
-// }
-
-func (s *TestHandlerSuite) TestInputSyntaxError(c *C) {
+func (s *TestHandlerSuite) TestWriteWasCalled(c *check.C) {
 	// TODO: implements
 }
 
-func (s *TestHandlerSuite) TestInputMatchesOutput(c *C) {
+func (s *TestHandlerSuite) TestInputSyntaxError(c *check.C) {
+	// TODO: implements
+}
+
+func (s *TestHandlerSuite) TestInputMatchesOutput(c *check.C) {
 	// TODO: implements
 }
 
