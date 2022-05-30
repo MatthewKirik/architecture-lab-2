@@ -25,8 +25,8 @@ func TestImplementation(t *testing.T) {
 	check.Run(&TestSuite{}, conf)
 }
 
-func (s *TestSuite) TestPrefixToInfix(c *check.C) {
-	samples := map[string]string{
+func (s *TestSuite) TestPrefixToInfixValid(c *check.C) {
+	cases := map[string]string{
 		"/ * / 22 12 44 * 1 + 10 1":         "22 / 12 * 44 / (1 * (10 + 1))",
 		"/ / / 12 12 12 12":                 "12 / 12 / 12 / 12",
 		"+ / 99 + 51 1 12":                  "99 / (51 + 1) + 12",
@@ -36,13 +36,26 @@ func (s *TestSuite) TestPrefixToInfix(c *check.C) {
 		"- + 5 / 9 2 / - + 1 7 / + 8 4 2 3": "5 + 9 / 2 - (1 + 7 - (8 + 4) / 2) / 3",
 		"- + a / b 2 / - + 1 b / sin n 2 3": "a + b / 2 - (1 + b - sin(n) / 2) / 3",
 	}
-	for prefix, expected := range samples {
-		res, err := PrefixToInfix(prefix)
+	for input, expected := range cases {
+		res, err := PrefixToInfix(input)
 		if err != nil {
-			c.Assert(err, check.ErrorMatches, expected)
+			c.Fail()
 		} else {
 			c.Assert(res, check.Equals, expected)
 		}
+	}
+}
+
+func (s *TestSuite) TestPrefixToInfixError(c *check.C) {
+	cases := map[string]error{
+		"/ / / * / 22 12 44 * 1 + 10 1": ParseEr,
+		"/ / / 12 12 12 12 12 12 12":    ParseEr,
+		"& / 99 + 51 1 12":              UnknownOperatorEr,
+		"= / 99 + 51 1 12":              UnknownOperatorEr,
+	}
+	for input, expected := range cases {
+		_, err := PrefixToInfix(input)
+		c.Assert(err, check.DeepEquals, expected)
 	}
 }
 
