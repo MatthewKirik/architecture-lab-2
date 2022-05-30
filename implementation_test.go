@@ -87,10 +87,13 @@ func (s *TestSuite) TestPrefixToInfixError(c *check.C) {
 }
 
 func ExamplePrefixToInfix() {
-	res, err := PrefixToInfix("++555")
+	res, err := PrefixToInfix("- + - 6 - 4 ^ A 2 12 - 2 1")
 	if err != nil {
 		panic(err)
 	} else {
 		fmt.Println(res)
 	}
+
+	// Output:
+	// 6 - (4 - A ^ 2) + 12 - (2 - 1)
 }
