@@ -3,7 +3,6 @@ package lab2
 import (
 	"errors"
 	"fmt"
-	"os"
 	"regexp"
 	"strings"
 )
@@ -17,18 +16,13 @@ type Operator struct {
 }
 
 var parseEr = errors.New("Error while parsing input string!")
-var errWrongArity = errors.New("Arguments count of node does not match operator arity!")
 var errUnknownOperator = errors.New("Could not parse operator in the string!")
 
 func (op Operator) evaluate(token string, args []ExpNode) string {
 	format := strings.Replace(op.Format, "%token", token, -1)
 	var argStrings []interface{} = make([]interface{}, op.Arity)
 	for i := 0; i < op.Arity; i++ {
-		argStr, er := args[i].evaluate()
-		if handleError(er) {
-			os.Exit(-1)
-		}
-
+		argStr := args[i].evaluate()
 		isLessPrioritized := args[i].Operator.Priority < op.Priority
 		isSameNonAss := args[i].Operator.Priority == op.Priority && !op.IsAssociative && i >= 1
 		if isLessPrioritized || isSameNonAss {
@@ -45,20 +39,9 @@ type ExpNode struct {
 	Args     []ExpNode
 }
 
-func (node ExpNode) evaluate() (string, error) {
-	if node.Operator.Arity != len(node.Args) {
-		return "", errWrongArity
-	}
+func (node ExpNode) evaluate() string {
 	evaled := node.Operator.evaluate(node.Token, node.Args)
-	return evaled, nil
-}
-
-func handleError(err error) bool {
-	if err != nil {
-		fmt.Errorf("An error occured:  %v", err)
-		return true
-	}
-	return false
+	return evaled
 }
 
 var operators = []Operator{
@@ -173,9 +156,6 @@ func PrefixToInfix(input string) (string, error) {
 	if len(left) > 0 {
 		return "", parseEr
 	}
-	str, er := node.evaluate()
-	if er != nil {
-		return "", er
-	}
+	str := node.evaluate()
 	return str, nil
 }
