@@ -125,7 +125,7 @@ func (s *TestHandlerSuite) TestWriteWasCalled(c *check.C) {
 	}
 }
 
-func (s *TestHandlerSuite) TestInput(c *check.C) {
+func (s *TestHandlerSuite) TestInputMatchesOutput(c *check.C) {
 	testCases := []testCase{
 		{
 			InputStr:        "ab rakada bra12 123 ? + /",
@@ -140,6 +140,16 @@ func (s *TestHandlerSuite) TestInput(c *check.C) {
 		{
 			InputStr:        "- + 1 / 5 6 + 1 2",
 			ExpectedStr:     "1 + 5 / 6 - (1 + 2)",
+			IsErrorExpected: false,
+		},
+		{
+			InputStr:        "* 2 ^ 2 2",
+			ExpectedStr:     "2 * 2 ^ 2",
+			IsErrorExpected: false,
+		},
+		{
+			InputStr:        "^ * 2 2 2",
+			ExpectedStr:     "(2 * 2) ^ 2",
 			IsErrorExpected: false,
 		},
 		{
