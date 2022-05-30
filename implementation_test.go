@@ -8,6 +8,22 @@ import (
 	"gopkg.in/check.v1"
 )
 
+type verifyCase struct {
+	input    string
+	expected string
+}
+
+func runTestCases(cases *[]verifyCase, c *check.C) {
+	for _, testCase := range *cases {
+		res, err := PrefixToInfix(testCase.input)
+		if err != nil {
+			c.Fail()
+		} else {
+			c.Assert(res, check.Equals, testCase.expected)
+		}
+	}
+}
+
 type TestSuite struct{}
 
 func TestImplementation(t *testing.T) {
@@ -25,12 +41,7 @@ func TestImplementation(t *testing.T) {
 	check.Run(&TestSuite{}, conf)
 }
 
-type verifyCase struct {
-	input    string
-	expected string
-}
-
-func (s *TestSuite) TestPrefixToInfixValid(c *check.C) {
+func (s *TestSuite) TestSimpleExpressions(c *check.C) {
 	cases := []verifyCase{
 		{
 			input:    "^ 2 3",
@@ -84,6 +95,13 @@ func (s *TestSuite) TestPrefixToInfixValid(c *check.C) {
 			input:    "+ / 99 + 51 1 12",
 			expected: "99 / (51 + 1) + 12",
 		},
+	}
+
+	runTestCases(&cases, c)
+}
+
+func (s *TestSuite) TestBigExpressions(c *check.C) {
+	cases := []verifyCase{
 		{
 			input:    "+ - 10 * 7 + 3 2 ^ 7 2",
 			expected: "10 - 7 * (3 + 2) + 7 ^ 2",
@@ -112,6 +130,13 @@ func (s *TestSuite) TestPrefixToInfixValid(c *check.C) {
 			input:    "- + 5 / 9 2 / - + 1 7 / + 8 4 2 3",
 			expected: "5 + 9 / 2 - (1 + 7 - (8 + 4) / 2) / 3",
 		},
+	}
+
+	runTestCases(&cases, c)
+}
+
+func (s *TestSuite) TestLargeExpressions(c *check.C) {
+	cases := []verifyCase{
 		{
 			input:    "- + - ^ 2 + 4 12 3 500 - + G ^ / 12 100 2 B",
 			expected: "2 ^ (4 + 12) - 3 + 500 - (G + (12 / 100) ^ 2 - B)",
@@ -134,17 +159,10 @@ func (s *TestSuite) TestPrefixToInfixValid(c *check.C) {
 		},
 	}
 
-	for _, testCase := range cases {
-		res, err := PrefixToInfix(testCase.input)
-		if err != nil {
-			c.Fail()
-		} else {
-			c.Assert(res, check.Equals, testCase.expected)
-		}
-	}
+	runTestCases(&cases, c)
 }
 
-func (s *TestSuite) TestPrefixToInfixError(c *check.C) {
+func (s *TestSuite) TestInvalidInput(c *check.C) {
 	cases := map[string]error{
 		"":                              parseErr,
 		"         ":                     parseErr,
