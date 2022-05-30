@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-type Operator struct {
+type operator struct {
 	Regex         string
 	Arity         int
 	Priority      int
@@ -15,10 +15,10 @@ type Operator struct {
 	IsAssociative bool
 }
 
-var ParseEr = errors.New("Error while parsing input string!")
-var UnknownOperatorEr = errors.New("Could not parse operator in the string!")
+var parseEr = errors.New("Error while parsing input string!")
+var unknownOperatorEr = errors.New("Could not parse operator in the string!")
 
-func (op Operator) evaluate(token string, args []ExpNode) string {
+func (op operator) evaluate(token string, args []expNode) string {
 	format := strings.Replace(op.Format, "%token", token, -1)
 	var argStrings []interface{} = make([]interface{}, op.Arity)
 	for i := 0; i < op.Arity; i++ {
@@ -33,18 +33,18 @@ func (op Operator) evaluate(token string, args []ExpNode) string {
 	return fmt.Sprintf(format, argStrings...)
 }
 
-type ExpNode struct {
-	Operator *Operator
+type expNode struct {
+	Operator *operator
 	Token    string
-	Args     []ExpNode
+	Args     []expNode
 }
 
-func (node ExpNode) evaluate() string {
+func (node expNode) evaluate() string {
 	evaled := node.Operator.evaluate(node.Token, node.Args)
 	return evaled
 }
 
-var operators = []Operator{
+var operators = []operator{
 	{
 		Regex:         `\+`,
 		Arity:         2,
@@ -104,9 +104,9 @@ var operators = []Operator{
 	},
 }
 
-func parseOperator(str string) (*Operator, []int, error) {
+func parseOperator(str string) (*operator, []int, error) {
 	var opLoc []int
-	var operator *Operator
+	var operator *operator
 	for _, v := range operators {
 		r := regexp.MustCompile(`\A` + v.Regex)
 		opLoc = r.FindStringIndex(str)
@@ -116,15 +116,15 @@ func parseOperator(str string) (*Operator, []int, error) {
 		}
 	}
 	if opLoc == nil {
-		return nil, nil, UnknownOperatorEr
+		return nil, nil, unknownOperatorEr
 	}
 	return operator, opLoc, nil
 }
 
-func parsePrefix(str string) (*ExpNode, string, error) {
+func parsePrefix(str string) (*expNode, string, error) {
 	str = strings.TrimSpace(str)
 	if len(str) == 0 {
-		return nil, "", ParseEr
+		return nil, "", parseEr
 	}
 	operator, opLoc, er := parseOperator(str)
 	if er != nil {
@@ -133,7 +133,7 @@ func parsePrefix(str string) (*ExpNode, string, error) {
 	token := str[opLoc[0]:opLoc[1]]
 	left := str[opLoc[1]:]
 
-	args := make([]ExpNode, operator.Arity)
+	args := make([]expNode, operator.Arity)
 	for i := 0; i < operator.Arity; i++ {
 		arg, leftAfterArg, err := parsePrefix(left)
 		if err != nil {
@@ -143,7 +143,7 @@ func parsePrefix(str string) (*ExpNode, string, error) {
 		left = leftAfterArg
 	}
 
-	node := &ExpNode{
+	node := &expNode{
 		Operator: operator,
 		Token:    token,
 		Args:     args,
@@ -157,7 +157,7 @@ func PrefixToInfix(input string) (string, error) {
 		return "", er
 	}
 	if len(left) > 0 {
-		return "", ParseEr
+		return "", parseEr
 	}
 	str := node.evaluate()
 	return str, nil

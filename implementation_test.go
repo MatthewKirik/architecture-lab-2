@@ -48,10 +48,10 @@ func (s *TestSuite) TestPrefixToInfixValid(c *check.C) {
 
 func (s *TestSuite) TestPrefixToInfixError(c *check.C) {
 	cases := map[string]error{
-		"/ / / * / 22 12 44 * 1 + 10 1": ParseEr,
-		"/ / / 12 12 12 12 12 12 12":    ParseEr,
-		"& / 99 + 51 1 12":              UnknownOperatorEr,
-		"= / 99 + 51 1 12":              UnknownOperatorEr,
+		"/ / / * / 22 12 44 * 1 + 10 1": parseEr,
+		"/ / / 12 12 12 12 12 12 12":    parseEr,
+		"& / 99 + 51 1 12":              unknownOperatorEr,
+		"= / 99 + 51 1 12":              unknownOperatorEr,
 	}
 	for input, expected := range cases {
 		_, err := PrefixToInfix(input)
