@@ -3,12 +3,11 @@ package lab2
 import (
 	"errors"
 	"fmt"
-	"os"
 	"regexp"
 	"strings"
 )
 
-type Operator struct {
+type operator struct {
 	Regex         string
 	Arity         int
 	Priority      int
@@ -16,15 +15,14 @@ type Operator struct {
 	IsAssociative bool
 }
 
-func (op Operator) Evaluate(token string, args []ExpNode) string {
+var parseEr = errors.New("Error while parsing input string!")
+var unknownOperatorEr = errors.New("Could not parse operator in the string!")
+
+func (op operator) evaluate(token string, args []expNode) string {
 	format := strings.Replace(op.Format, "%token", token, -1)
 	var argStrings []interface{} = make([]interface{}, op.Arity)
 	for i := 0; i < op.Arity; i++ {
-		argStr, er := args[i].Evaluate()
-		if handleError(er) {
-			os.Exit(-1)
-		}
-
+		argStr := args[i].evaluate()
 		isLessPrioritized := args[i].Operator.Priority < op.Priority
 		isSameNonAss := args[i].Operator.Priority == op.Priority && !op.IsAssociative && i >= 1
 		if isLessPrioritized || isSameNonAss {
@@ -35,31 +33,18 @@ func (op Operator) Evaluate(token string, args []ExpNode) string {
 	return fmt.Sprintf(format, argStrings...)
 }
 
-type ExpNode struct {
-	Operator *Operator
+type expNode struct {
+	Operator *operator
 	Token    string
-	Args     []ExpNode
+	Args     []expNode
 }
 
-var ErrWrongArity = errors.New("Arguments count of node does not match operator arity!")
-
-func (node ExpNode) Evaluate() (string, error) {
-	if node.Operator.Arity != len(node.Args) {
-		return "", ErrWrongArity
-	}
-	evaled := node.Operator.Evaluate(node.Token, node.Args)
-	return evaled, nil
+func (node expNode) evaluate() string {
+	evaled := node.Operator.evaluate(node.Token, node.Args)
+	return evaled
 }
 
-func handleError(err error) bool {
-	if err != nil {
-		fmt.Errorf("An error occured:  %v", err)
-		return true
-	}
-	return false
-}
-
-var operators = []Operator{
+var operators = []operator{
 	{
 		Regex:         `\+`,
 		Arity:         2,
@@ -112,34 +97,35 @@ var operators = []Operator{
 	},
 
 	{
-		Regex:    `[a-zA-Z]+`,
+		Regex:    `[a-zA-Z]`,
 		Arity:    0,
 		Priority: 100,
 		Format:   "%token",
 	},
 }
 
-var ErrUnknownOperator = errors.New("Could not parse operator in the string!")
-
-func parseOperator(str string) (*Operator, []int, error) {
+func parseOperator(str string) (*operator, []int, error) {
 	var opLoc []int
-	var operator *Operator
+	var operator *operator
 	for _, v := range operators {
 		r := regexp.MustCompile(`\A` + v.Regex)
 		opLoc = r.FindStringIndex(str)
-		if len(opLoc) == 2 {
+		if opLoc != nil {
 			operator = &v
 			break
 		}
 	}
-	if len(opLoc) != 2 {
-		return nil, nil, ErrUnknownOperator
+	if opLoc == nil {
+		return nil, nil, unknownOperatorEr
 	}
 	return operator, opLoc, nil
 }
 
-func parsePrefix(str string) (*ExpNode, string, error) {
+func parsePrefix(str string) (*expNode, string, error) {
 	str = strings.TrimSpace(str)
+	if len(str) == 0 {
+		return nil, "", parseEr
+	}
 	operator, opLoc, er := parseOperator(str)
 	if er != nil {
 		return nil, "", er
@@ -147,7 +133,7 @@ func parsePrefix(str string) (*ExpNode, string, error) {
 	token := str[opLoc[0]:opLoc[1]]
 	left := str[opLoc[1]:]
 
-	args := make([]ExpNode, operator.Arity)
+	args := make([]expNode, operator.Arity)
 	for i := 0; i < operator.Arity; i++ {
 		arg, leftAfterArg, err := parsePrefix(left)
 		if err != nil {
@@ -157,7 +143,7 @@ func parsePrefix(str string) (*ExpNode, string, error) {
 		left = leftAfterArg
 	}
 
-	node := &ExpNode{
+	node := &expNode{
 		Operator: operator,
 		Token:    token,
 		Args:     args,
@@ -165,11 +151,14 @@ func parsePrefix(str string) (*ExpNode, string, error) {
 	return node, left, nil
 }
 
-// TODO: document this function.
-// PrefixToInfix converts
 func PrefixToInfix(input string) (string, error) {
-	node, _, _ := parsePrefix(input)
-	str, _ := node.Evaluate()
-	// fmt.Println(str)
+	node, left, er := parsePrefix(input)
+	if er != nil {
+		return "", er
+	}
+	if len(left) > 0 {
+		return "", parseEr
+	}
+	str := node.evaluate()
 	return str, nil
 }
