@@ -15,8 +15,8 @@ type Operator struct {
 	IsAssociative bool
 }
 
-var parseEr = errors.New("Error while parsing input string!")
-var errUnknownOperator = errors.New("Could not parse operator in the string!")
+var ParseEr = errors.New("Error while parsing input string!")
+var UnknownOperatorEr = errors.New("Could not parse operator in the string!")
 
 func (op Operator) evaluate(token string, args []ExpNode) string {
 	format := strings.Replace(op.Format, "%token", token, -1)
@@ -110,19 +110,22 @@ func parseOperator(str string) (*Operator, []int, error) {
 	for _, v := range operators {
 		r := regexp.MustCompile(`\A` + v.Regex)
 		opLoc = r.FindStringIndex(str)
-		if len(opLoc) == 2 {
+		if opLoc != nil {
 			operator = &v
 			break
 		}
 	}
-	if len(opLoc) != 2 {
-		return nil, nil, errUnknownOperator
+	if opLoc == nil {
+		return nil, nil, UnknownOperatorEr
 	}
 	return operator, opLoc, nil
 }
 
 func parsePrefix(str string) (*ExpNode, string, error) {
 	str = strings.TrimSpace(str)
+	if len(str) == 0 {
+		return nil, "", ParseEr
+	}
 	operator, opLoc, er := parseOperator(str)
 	if er != nil {
 		return nil, "", er
@@ -154,7 +157,7 @@ func PrefixToInfix(input string) (string, error) {
 		return "", er
 	}
 	if len(left) > 0 {
-		return "", parseEr
+		return "", ParseEr
 	}
 	str := node.evaluate()
 	return str, nil
