@@ -67,6 +67,8 @@ func (s *TestSuite) TestPrefixToInfixValid(c *check.C) {
 func (s *TestSuite) TestPrefixToInfixError(c *check.C) {
 	cases := map[string]error{
 		"":                              parseErr,
+		"         ":                     parseErr,
+		"1 345 66 3 1 5":                parseErr,
 		"/ / / * / 22 12 44 * 1 + 10 1": parseErr,
 		"/ / / 12 12 12 12 12 12 12":    parseErr,
 		"1 ? + 2 3":                     parseErr,
