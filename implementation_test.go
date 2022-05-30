@@ -25,6 +25,11 @@ func TestImplementation(t *testing.T) {
 	check.Run(&TestSuite{}, conf)
 }
 
+type verifyCase struct {
+	input    string
+	expected string
+}
+
 func (s *TestSuite) TestPrefixToInfixValid(c *check.C) {
 	cases := map[string]string{
 		"^ 2 3":                             "2 ^ 3",
