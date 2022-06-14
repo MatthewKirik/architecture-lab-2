@@ -16,6 +16,12 @@ var (
 	outputFilepath  = flag.String("o", "", "Result file with infix expression")
 )
 
+func closeFile(f *os.File) {
+	if err := f.Close(); err != nil {
+		log.Fatalf("Cannot close the file at path: '%s'", f.Name())
+	}
+}
+
 func main() {
 	flag.Parse()
 
@@ -38,6 +44,7 @@ func main() {
 		if err != nil {
 			log.Fatalf("Cannot open file with path: '%s'", *inputFilepath)
 		}
+		defer closeFile(reader.(*os.File))
 	} else {
 		log.Fatal("You have not specified any input")
 	}
@@ -47,6 +54,7 @@ func main() {
 		if err != nil {
 			log.Fatalf("Cannot create file with path: '%s'", *outputFilepath)
 		}
+		defer closeFile(writer.(*os.File))
 	} else {
 		writer = os.Stdout
 	}
