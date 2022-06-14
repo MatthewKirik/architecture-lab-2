@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"io"
 	"log"
@@ -18,11 +19,11 @@ var (
 
 func closeFile(f *os.File) {
 	if err := f.Close(); err != nil {
-		log.Fatalf("Cannot close the file at path: '%s'", f.Name())
+		log.Fatal(err)
 	}
 }
 
-func main() {
+func processExpression() error {
 	flag.Parse()
 
 	*inputExpression = strings.TrimSpace(*inputExpression)
@@ -36,23 +37,23 @@ func main() {
 	)
 
 	if *inputExpression != "" && *inputFilepath != "" {
-		log.Fatal("You have specified too many inputs")
+		return errors.New("you have specified too many inputs")
 	} else if *inputExpression != "" && *inputFilepath == "" {
 		reader = strings.NewReader(*inputExpression)
 	} else if *inputExpression == "" && *inputFilepath != "" {
 		reader, err = os.Open(*inputFilepath)
 		if err != nil {
-			log.Fatalf("Cannot open file with path: '%s'", *inputFilepath)
+			return err
 		}
 		defer closeFile(reader.(*os.File))
 	} else {
-		log.Fatal("You have not specified any input")
+		return errors.New("you have not specified any input")
 	}
 
 	if *outputFilepath != "" {
 		writer, err = os.Create(*outputFilepath)
 		if err != nil {
-			log.Fatalf("Cannot create file with path: '%s'", *outputFilepath)
+			return err
 		}
 		defer closeFile(writer.(*os.File))
 	} else {
@@ -65,6 +66,14 @@ func main() {
 	}
 
 	if errCompute := chPtr.Compute(); errCompute != nil {
-		log.Fatal(errCompute)
+		return errCompute
+	}
+
+	return nil
+}
+
+func main() {
+	if err := processExpression(); err != nil {
+		log.Fatal(err)
 	}
 }
