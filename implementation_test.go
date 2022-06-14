@@ -164,18 +164,18 @@ func (s *TestSuite) TestLargeExpressions(c *check.C) {
 
 func (s *TestSuite) TestInvalidInput(c *check.C) {
 	cases := map[string]error{
-		"":                              parseErr,
-		"         ":                     parseErr,
-		"1 345 66 3 1 5":                parseErr,
-		"/ / / * / 22 12 44 * 1 + 10 1": parseErr,
-		"/ / / 12 12 12 12 12 12 12":    parseErr,
-		"1 ? + 2 3":                     parseErr,
-		"-------- *** +++ / ^":          parseErr,
-		"+ + + + + + +":                 parseErr,
-		"& 1 2":                         unknownOperatorErr,
-		"? ! sdfsdf --  ?? %$! * * )":   unknownOperatorErr,
-		"& / 99 + 51 1 12":              unknownOperatorErr,
-		"= / 99 + 51 1 12":              unknownOperatorErr,
+		"":                              errParse,
+		"         ":                     errParse,
+		"1 345 66 3 1 5":                errParse,
+		"/ / / * / 22 12 44 * 1 + 10 1": errParse,
+		"/ / / 12 12 12 12 12 12 12":    errParse,
+		"1 ? + 2 3":                     errParse,
+		"-------- *** +++ / ^":          errParse,
+		"+ + + + + + +":                 errParse,
+		"& 1 2":                         errUnknownOperator,
+		"? ! sdfsdf --  ?? %$! * * )":   errUnknownOperator,
+		"& / 99 + 51 1 12":              errUnknownOperator,
+		"= / 99 + 51 1 12":              errUnknownOperator,
 	}
 
 	for input, expected := range cases {
